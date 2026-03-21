@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>DGX Spark</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    #echomind-error { color: #b00020; margin-top: 0.75rem; white-space: pre-wrap; }
+    #echomind-result { margin-top: 0.75rem; }
+    #personaplex-error { color: #b00020; margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.9rem; }
+    #personaplex-result { margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.85rem; max-height: 18rem; overflow: auto; }
+    #hotspot-error { color: #b00020; margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.9rem; }
+    #hotspot-result { margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.85rem; max-height: 12rem; overflow: auto; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .hotspot-status-box {
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: #fafafa;
+    }
+    .hotspot-status-box .overall { font-weight: 600; }
+    .hotspot-status-box.running .overall { color: #0d6e0d; }
+    .hotspot-status-box.stopped .overall { color: #555; }
+    .hotspot-status-box.partial .overall { color: #b35900; }
+    .hotspot-status-box.unknown .overall { color: #666; }
+    #hotspot-services-list { margin: 0.5rem 0 0; padding-left: 1.25rem; font-size: 0.9rem; }
+    #hotspot-services-list li { margin: 0.15rem 0; }
+    .svc-ok { color: #0d6e0d; }
+    .svc-off { color: #777; }
+  </style>
+</head>
+<body>
+  <h1>DGX Spark Local System</h1>
+  <p>System is running 🚀</p>
+  <p id="status">Checking...</p>
+
+  <section style="margin-top: 1.5rem;">
+    <h2>EchoMind</h2>
+    <p>Runs <code>docker compose down</code> then <code>docker compose up -d</code> in the enterprise folder.</p>
+    <button type="button" id="echomind-btn">EchoMind</button>
+    <p id="echomind-error" hidden></p>
+    <div id="echomind-result" hidden></div>
+  </section>
+
+  <section style="margin-top: 1.5rem;">
+    <h2>Personaplex · Conversation</h2>
+    <p>Runs <code>npm run build</code> in <code>~/Documents/plex/personaplex/client</code>, stops old <code>moshi.server</code> / vite / port 8998, then starts <code>python -m moshi.server --fp8 --ssl … --static client/dist</code> in the background (logs: <code>/tmp/moshi-personaplex.log</code>).</p>
+    <button type="button" id="personaplex-conversation-btn">Conversation</button>
+    <p id="personaplex-error" hidden></p>
+    <div id="personaplex-result" hidden></div>
+  </section>
+
+  <section style="margin-top: 1.5rem;">
+    <h2>Wi‑Fi hotspot</h2>
+    <p>Two actions only. <strong>Enable</strong> = first-time setup + hotspot on. <strong>Disable</strong> = hotspot off + normal Wi‑Fi. Status updates after each action and on page load. Passwordless sudo: <code>./install_passwordless_sudo.sh</code>.</p>
+
+    <div id="hotspot-status-box" class="hotspot-status-box unknown" aria-live="polite">
+      <p style="margin: 0 0 0.35rem;"><strong>Hotspot stack:</strong> <span id="hotspot-overall" class="overall">Loading…</span></p>
+      <p id="hotspot-summary" style="margin: 0; font-size: 0.95rem; color: #333;"></p>
+      <ul id="hotspot-services-list"></ul>
+    </div>
+
+    <div class="btn-row">
+      <button type="button" id="hotspot-enable-btn" title="hotspot_enable.sh">Enable hotspot</button>
+      <button type="button" id="hotspot-disable-btn" title="hotspot_disable.sh">Disable hotspot (restore Wi‑Fi)</button>
+    </div>
+    <p id="hotspot-error" hidden></p>
+    <div id="hotspot-result" hidden></div>
+  </section>
+
+  <script>
+    fetch('/health')
+      .then(res => res.json())
+      .then(() => { document.getElementById('status').innerText = "Backend Healthy"; })
+      .catch(() => { document.getElementById('status').innerText = "Backend Down"; });
+
+    const btn = document.getElementById('echomind-btn');
+    const errEl = document.getElementById('echomind-error');
+    const resultEl = document.getElementById('echomind-result');
+
+    btn.addEventListener('click', async () => {
+      errEl.hidden = true;
+      resultEl.hidden = true;
+      errEl.textContent = '';
+      resultEl.innerHTML = '';
+      btn.disabled = true;
+      btn.textContent = 'Starting…';
+      try {
+        const res = await fetch('/api/echomind/start', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const detail = data.detail != null ? String(data.detail) : res.statusText;
+          throw new Error(detail);
+        }
+        const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+        resultEl.innerHTML = '<p>' + esc(data.message) + '</p><p><a href="' + esc(data.url) + '" target="_blank" rel="noopener">' + esc(data.url) + '</a></p>';
+        resultEl.hidden = false;
+      } catch (e) {
+        errEl.textContent = e.message || 'Request failed';
+        errEl.hidden = false;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'EchoMind';
+      }
+    });
+
+    const pBtn = document.getElementById('personaplex-conversation-btn');
+    const pErr = document.getElementById('personaplex-error');
+    const pRes = document.getElementById('personaplex-result');
+    pBtn.addEventListener('click', async () => {
+      pErr.hidden = true;
+      pRes.hidden = true;
+      pErr.textContent = '';
+      pRes.textContent = '';
+      pBtn.disabled = true;
+      pBtn.textContent = 'Building & starting…';
+      try {
+        const res = await fetch('/api/personaplex/conversation', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const detail = data.detail != null ? String(data.detail) : res.statusText;
+          throw new Error(detail);
+        }
+        const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        pRes.innerHTML = '<pre style="margin:0;white-space:pre-wrap;">' + esc(data.message || '') + '</pre>'
+          + '<p><a href="' + esc(data.url) + '" target="_blank" rel="noopener">' + esc(data.url) + '</a> (self-signed TLS — browser warning is normal)</p>';
+        pRes.hidden = false;
+      } catch (e) {
+        pErr.textContent = e.message || 'Request failed';
+        pErr.hidden = false;
+      } finally {
+        pBtn.disabled = false;
+        pBtn.textContent = 'Conversation';
+      }
+    });
+
+    const hotspotButtons = () => [
+      document.getElementById('hotspot-enable-btn'),
+      document.getElementById('hotspot-disable-btn'),
+    ];
+
+    function setHotspotButtonsDisabled(disabled) {
+      hotspotButtons().forEach((b) => { if (b) b.disabled = disabled; });
+    }
+
+    async function refreshHotspotStatus() {
+      const box = document.getElementById('hotspot-status-box');
+      const overallEl = document.getElementById('hotspot-overall');
+      const summaryEl = document.getElementById('hotspot-summary');
+      const listEl = document.getElementById('hotspot-services-list');
+      box.classList.remove('running', 'stopped', 'partial', 'unknown');
+      overallEl.textContent = 'Loading…';
+      summaryEl.textContent = '';
+      listEl.innerHTML = '';
+      try {
+        const res = await fetch('/api/hotspot/status');
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          overallEl.textContent = 'Unavailable';
+          summaryEl.textContent = data.detail != null ? String(data.detail) : res.statusText;
+          box.classList.add('unknown');
+          return;
+        }
+        const o = data.overall || 'unknown';
+        box.classList.add(o);
+        const labels = { running: 'Running', stopped: 'Stopped', partial: 'Partial', unknown: 'Unknown' };
+        overallEl.textContent = labels[o] || o;
+        summaryEl.textContent = data.summary || '';
+
+        const svcs = data.services || {};
+        Object.keys(svcs).sort().forEach((name) => {
+          const li = document.createElement('li');
+          const s = svcs[name];
+          const a = (s && s.active) || '?';
+          const e = (s && s.enabled) || '?';
+          const ok = a === 'active' || (typeof a === 'string' && a.indexOf('active (') === 0);
+          const esc = (t) => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+          li.innerHTML = '<span class="' + (ok ? 'svc-ok' : 'svc-off') + '">' + esc(name) + '</span>'
+            + ' — active: <code>' + esc(a) + '</code>, enabled: <code>' + esc(e) + '</code>';
+          listEl.appendChild(li);
+        });
+      } catch (e) {
+        box.classList.add('unknown');
+        overallEl.textContent = 'Error';
+        summaryEl.textContent = e.message || 'Could not load status';
+      }
+    }
+
+    async function callHotspot(action) {
+      const errEl = document.getElementById('hotspot-error');
+      const resultEl = document.getElementById('hotspot-result');
+      errEl.hidden = true;
+      resultEl.hidden = true;
+      errEl.textContent = '';
+      resultEl.textContent = '';
+      setHotspotButtonsDisabled(true);
+      try {
+        const res = await fetch('/api/hotspot/' + action, { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          const detail = data.detail != null ? String(data.detail) : res.statusText;
+          throw new Error(detail);
+        }
+        resultEl.textContent = data.message || 'Done.';
+        resultEl.hidden = false;
+      } catch (e) {
+        errEl.textContent = e.message || 'Request failed';
+        errEl.hidden = false;
+      } finally {
+        setHotspotButtonsDisabled(false);
+        await refreshHotspotStatus();
+      }
+    }
+
+    document.getElementById('hotspot-enable-btn').addEventListener('click', () => callHotspot('enable'));
+    document.getElementById('hotspot-disable-btn').addEventListener('click', () => callHotspot('disable'));
+
+    refreshHotspotStatus();
+  </script>
+</body>
+</html>
