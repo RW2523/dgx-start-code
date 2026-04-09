@@ -16,4 +16,4 @@ echo "==> start_hotspot_stack.sh ..."
 sudo bash "${SCRIPT_DIR}/start_hotspot_stack.sh"
 
 echo
-echo "Hotspot enable complete. App on :8000 was not stopped."
+echo "Hotspot enable complete. dgx-app on :28734 was not stopped."

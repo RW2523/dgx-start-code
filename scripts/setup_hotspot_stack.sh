@@ -11,6 +11,9 @@ DHCP_END="10.10.0.100"
 APP_USER="echomind"
 APP_DIR="/home/echomind/dgx-local-app/backend"
 APP_SERVICE="dgx-app"
+# Uncommon dev port (avoid 3000/8000/8080/5173). Match systemd + nginx + DGX_APP_PORT in main.py default.
+APP_PORT=28734
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "==> Installing required packages..."
 sudo apt update
@@ -86,12 +89,16 @@ echo "==> Creating dgx-app service ..."
 sudo tee /etc/systemd/system/${APP_SERVICE}.service > /dev/null <<EOF
 [Unit]
 Description=DGX App
-After=network.target
+After=network.target NetworkManager.service
+Wants=network.target
 
 [Service]
 User=${APP_USER}
 WorkingDirectory=${APP_DIR}
-ExecStart=${APP_DIR}/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Environment=DGX_APP_PORT=${APP_PORT}
+ExecStart=${APP_DIR}/.venv/bin/uvicorn main:app --host 0.0.0.0 --port ${APP_PORT}
+ExecStartPost=-/bin/sleep 5
+ExecStartPost=-/bin/bash ${REPO_ROOT}/scripts/maybe_start_hotspot_stack.sh
 Restart=always
 
 [Install]
@@ -114,11 +121,15 @@ server {
     server_name _;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://127.0.0.1:${APP_PORT};
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        # Long docker / compose operations (if ever proxied synchronously)
+        proxy_connect_timeout 3600s;
+        proxy_send_timeout 3600s;
+        proxy_read_timeout 3600s;
     }
 }
 EOF

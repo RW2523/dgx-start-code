@@ -17,3 +17,4 @@ sudo systemctl --no-pager --full status nginx || true
 
 echo
 echo "Hotspot stack started."
+rm -f /tmp/dgx-hotspot-skip-autostart

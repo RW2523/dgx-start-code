@@ -3,9 +3,9 @@
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now dgx-app
 #
-# Boot: uvicorn starts first, then (after a short delay) start_hotspot_stack.sh brings up AP/DHCP/nginx.
-# echomind MUST have NOPASSWD + !requiretty for start_hotspot_stack.sh — run scripts/install_passwordless_sudo.sh
-# (NOPASSWD alone is not enough if sudoers has Defaults requiretty).
+# Boot: uvicorn starts first, then (after a short delay) maybe_start_hotspot_stack.sh brings up AP/DHCP/nginx
+# unless the user chose Disable (see /tmp/dgx-hotspot-skip-autostart — cleared on reboot or after Enable).
+# echomind MUST have NOPASSWD + !requiretty for maybe_start_hotspot_stack.sh — run scripts/install_passwordless_sudo.sh
 # Do NOT use hotspot_enable.sh here (can run full apt setup on first boot).
 # Leading "-" = hotspot failure does not fail the whole dgx-app unit.
 
@@ -17,10 +17,11 @@ Wants=network.target
 [Service]
 User=echomind
 WorkingDirectory=/home/echomind/dgx-local-app/backend
-ExecStart=/home/echomind/dgx-local-app/backend/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Environment=DGX_APP_PORT=28734
+ExecStart=/home/echomind/dgx-local-app/backend/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 28734
 # Cold boot: wlan driver / NM settle before hostapd (tune sleep if needed).
 ExecStartPost=-/bin/sleep 5
-ExecStartPost=-/bin/bash /home/echomind/dgx-local-app/scripts/start_hotspot_stack.sh
+ExecStartPost=-/bin/bash /home/echomind/dgx-local-app/scripts/maybe_start_hotspot_stack.sh
 Restart=always
 
 [Install]

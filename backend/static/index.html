@@ -1,81 +1,619 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>DGX Spark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EchoMind Starter Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
-    button { padding: 0.5rem 1rem; font-size: 1rem; cursor: pointer; }
-    button:disabled { opacity: 0.6; cursor: not-allowed; }
-    #echomind-error { color: #b00020; margin-top: 0.75rem; white-space: pre-wrap; }
-    #echomind-result { margin-top: 0.75rem; }
-    #personaplex-error { color: #b00020; margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.9rem; }
-    #personaplex-result { margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.85rem; max-height: 18rem; overflow: auto; }
-    #hotspot-error { color: #b00020; margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.9rem; }
-    #hotspot-result { margin-top: 0.75rem; white-space: pre-wrap; font-size: 0.85rem; max-height: 12rem; overflow: auto; }
-    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-    .hotspot-status-box {
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      background: #fafafa;
+    :root {
+      --blue-950: #061426;
+      --blue-900: #0a1f3d;
+      --blue-850: #0f2d52;
+      --blue-800: #153a66;
+      --blue-600: #2563ab;
+      --blue-500: #3d7dd9;
+      --blue-400: #6ba3f0;
+      --blue-300: #93c5fd;
+      --blue-200: #b8d4f5;
+      --blue-100: #d6e8fc;
+      --blue-50: #eef6ff;
+      --surface: #f5faff;
+      --text: #0f2744;
+      --text-muted: #3d5a78;
+      --success: #0d7a4a;
+      --success-bg: #d4f0e4;
+      --warn: #b45309;
+      --error: #b91c1c;
+      --radius: 12px;
+      --shadow: 0 4px 24px rgba(6, 20, 38, 0.12);
+      --shadow-soft: 0 2px 12px rgba(15, 61, 115, 0.08);
     }
-    .hotspot-status-box .overall { font-weight: 600; }
-    .hotspot-status-box.running .overall { color: #0d6e0d; }
-    .hotspot-status-box.stopped .overall { color: #555; }
-    .hotspot-status-box.partial .overall { color: #b35900; }
-    .hotspot-status-box.unknown .overall { color: #666; }
-    #hotspot-services-list { margin: 0.5rem 0 0; padding-left: 1.25rem; font-size: 0.9rem; }
-    #hotspot-services-list li { margin: 0.15rem 0; }
-    .svc-ok { color: #0d6e0d; }
-    .svc-off { color: #777; }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(61, 125, 217, 0.35), transparent 55%),
+        radial-gradient(900px 500px at -5% 30%, rgba(37, 99, 171, 0.25), transparent 50%),
+        linear-gradient(165deg, var(--blue-950) 0%, var(--blue-900) 38%, var(--blue-850) 100%);
+      background-attachment: fixed;
+    }
+
+    .site-header {
+      padding: 1.75rem 1.25rem 2rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(184, 212, 245, 0.15);
+    }
+    .site-header h1 {
+      margin: 0;
+      font-family: Outfit, system-ui, sans-serif;
+      font-weight: 700;
+      font-size: clamp(1.65rem, 4vw, 2.15rem);
+      letter-spacing: -0.02em;
+      color: var(--blue-50);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .site-header .tagline {
+      margin: 0.35rem 0 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--blue-200);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .site-header .brand-sub {
+      margin: 0.85rem 0 0;
+      font-size: 0.9rem;
+      color: rgba(230, 244, 255, 0.82);
+    }
+    .site-header .brand-sub strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .wrap {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 3rem;
+    }
+
+    .hero-card {
+      background: linear-gradient(145deg, var(--surface) 0%, var(--blue-50) 100%);
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-soft);
+    }
+    .hero-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.65rem 1rem;
+      justify-content: space-between;
+    }
+    .hero-row p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+    #status {
+      display: inline-block;
+      margin: 0;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      background: var(--blue-100);
+      color: var(--blue-800);
+      border: 1px solid var(--blue-200);
+    }
+    #status.status-ok {
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: #9fd4b8;
+    }
+    #status.status-down {
+      background: #fee2e2;
+      color: var(--error);
+      border-color: #fecaca;
+    }
+
+    .panel {
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(180deg, #fff 0%, var(--surface) 100%);
+      box-shadow: var(--shadow-soft);
+    }
+    .panel .overall { font-weight: 600; }
+    .panel.running .overall { color: var(--success); }
+    .panel.stopped .overall { color: var(--text-muted); }
+    .panel.partial .overall { color: var(--warn); }
+    .panel.unknown .overall { color: var(--text-muted); }
+
+    .panel-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0 0 0.35rem;
+    }
+    .panel-title-row strong { font-family: Outfit, sans-serif; font-weight: 600; color: var(--blue-900); }
+    .panel-meta {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .panel-meta code {
+      font-size: 0.82em;
+      background: var(--blue-50);
+      padding: 0.12rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid var(--blue-200);
+    }
+
+    #hotspot-services-list, #app-ports-list {
+      margin: 0.5rem 0 0;
+      padding-left: 1.25rem;
+      font-size: 0.9rem;
+    }
+    #hotspot-services-list li, #app-ports-list li { margin: 0.2rem 0; }
+    .svc-ok { color: var(--success); font-weight: 600; }
+    .svc-off { color: var(--text-muted); }
+
+    .port-hint {
+      font-size: 0.9rem;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--blue-50) 0%, #e0efff 100%);
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      margin: 0 0 1rem;
+      box-shadow: var(--shadow-soft);
+    }
+    .port-hint strong { color: var(--blue-850); }
+    .port-hint code { font-size: 0.85em; background: rgba(255,255,255,0.7); padding: 0.1rem 0.3rem; border-radius: 4px; }
+    .port-hint a { color: var(--blue-600); font-weight: 600; }
+    .port-hint a:hover { color: var(--blue-800); }
+
+    section.card-section {
+      margin-top: 1.25rem;
+      padding: 1.25rem 1.2rem;
+      background: linear-gradient(180deg, #fff 0%, var(--surface) 100%);
+      border: 1px solid var(--blue-200);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    section.card-section h2 {
+      margin: 0 0 0.65rem;
+      font-family: Outfit, sans-serif;
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: var(--blue-900);
+      border-bottom: 2px solid var(--blue-100);
+      padding-bottom: 0.5rem;
+    }
+    section.card-section > p {
+      margin: 0 0 1rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    section.card-section > p code {
+      font-size: 0.88em;
+      background: var(--blue-50);
+      padding: 0.08rem 0.3rem;
+      border-radius: 4px;
+      border: 1px solid var(--blue-200);
+    }
+
+    button {
+      font-family: "Source Sans 3", system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.55rem 1.15rem;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    button:not(:disabled):hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(180deg, var(--blue-500) 0%, var(--blue-600) 100%);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37, 99, 171, 0.35);
+    }
+    .btn-primary:not(:disabled):hover {
+      box-shadow: 0 4px 14px rgba(37, 99, 171, 0.45);
+    }
+    .btn-secondary {
+      background: #fff;
+      color: var(--blue-800);
+      border: 1px solid var(--blue-200);
+      box-shadow: 0 1px 4px rgba(15, 61, 115, 0.08);
+    }
+    .btn-secondary:not(:disabled):hover {
+      background: var(--blue-50);
+      border-color: var(--blue-400);
+    }
+    .btn-safety {
+      background: linear-gradient(180deg, #fff8f0 0%, #ffedd5 100%);
+      color: #9a3412;
+      border: 2px solid #ea580c;
+      box-shadow: 0 1px 6px rgba(234, 88, 12, 0.2);
+    }
+    .btn-safety:not(:disabled):hover {
+      background: #fff7ed;
+      border-color: #c2410c;
+      color: #7c2d12;
+    }
+    .btn-ghost {
+      background: rgba(255, 255, 255, 0.92);
+      color: var(--blue-800);
+      border: 1px solid var(--blue-200);
+      font-size: 0.85rem;
+      padding: 0.3rem 0.65rem;
+    }
+    .btn-ghost:not(:disabled):hover { background: #fff; }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; }
+
+    #echomind-error, #personaplex-error, #hotspot-error {
+      color: var(--error);
+      margin-top: 0.75rem;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.65rem;
+      background: #fef2f2;
+      border-radius: 8px;
+      border: 1px solid #fecaca;
+    }
+    #echomind-result, #personaplex-result, #hotspot-result {
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      background: var(--blue-50);
+      border: 1px solid var(--blue-200);
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+    #personaplex-result, #hotspot-result {
+      white-space: pre-wrap;
+      max-height: 18rem;
+      overflow: auto;
+    }
+    #hotspot-result { max-height: 12rem; }
+    #echomind-result a, #personaplex-result a { color: var(--blue-600); font-weight: 600; }
+
+    .site-footer {
+      text-align: center;
+      padding: 1.5rem 1rem 2rem;
+      font-size: 0.8rem;
+      color: rgba(184, 212, 245, 0.55);
+    }
+    .site-footer a {
+      color: var(--blue-300);
+      text-decoration: none;
+    }
+    .site-footer a:hover { text-decoration: underline; color: var(--blue-200); }
+
+    .section-lede {
+      margin: 0 0 1rem;
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      line-height: 1.45;
+    }
+
+    details.tech-details {
+      margin-top: 0.65rem;
+      border: 1px solid var(--blue-200);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.65);
+      overflow: hidden;
+    }
+    details.tech-details:first-of-type { margin-top: 0.35rem; }
+    .card-section details.tech-details { background: var(--blue-50); }
+    details.tech-details > summary {
+      padding: 0.55rem 0.85rem;
+      cursor: pointer;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--blue-800);
+      list-style: none;
+      user-select: none;
+    }
+    details.tech-details > summary::-webkit-details-marker { display: none; }
+    details.tech-details > summary::before {
+      content: '';
+      display: inline-block;
+      width: 0.35rem;
+      height: 0.35rem;
+      margin-right: 0.45rem;
+      border-right: 2px solid var(--blue-600);
+      border-bottom: 2px solid var(--blue-600);
+      transform: rotate(-45deg);
+      vertical-align: 0.15em;
+      transition: transform 0.15s ease;
+    }
+    details.tech-details[open] > summary::before {
+      transform: rotate(45deg);
+      vertical-align: 0.05em;
+    }
+    details.tech-details .tech-body {
+      padding: 0 0.85rem 0.85rem;
+      border-top: 1px solid var(--blue-200);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    details.tech-details .tech-body > p { margin: 0.5rem 0 0; }
+    details.tech-details .tech-body > p:first-child { margin-top: 0.5rem; }
+
+    #app-ports-friendly { margin-top: 0.35rem; }
+    .svc-friendly-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--blue-100);
+    }
+    .svc-friendly-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .svc-friendly-name {
+      flex: 1 1 8rem;
+      font-weight: 600;
+      color: var(--blue-900);
+    }
+    .svc-badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      border: 1px solid var(--blue-200);
+      background: #fff;
+      color: var(--text-muted);
+    }
+    .svc-badge.ok {
+      background: var(--success-bg);
+      color: var(--success);
+      border-color: #9fd4b8;
+    }
+    .svc-open, .svc-open:visited {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--blue-600);
+      text-decoration: none;
+    }
+    .svc-open:hover { color: var(--blue-800); text-decoration: underline; }
+    .svc-open-disabled {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .hotspot-compact-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.85rem;
+      margin: 0 0 0.35rem;
+    }
+    .hotspot-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .hotspot-pill {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      border: 1px solid var(--blue-200);
+      background: #fff;
+    }
+    .panel.hotspot-panel.running .hotspot-pill { background: var(--success-bg); color: var(--success); border-color: #9fd4b8; }
+    .panel.hotspot-panel.stopped .hotspot-pill { color: var(--text-muted); }
+    .panel.hotspot-panel.partial .hotspot-pill { background: #fff7ed; color: var(--warn); border-color: #fed7aa; }
+    .panel.hotspot-panel.unknown .hotspot-pill { color: var(--text-muted); }
+
+    details.port-hint-details { margin-bottom: 1rem; }
+
+    .card-section > .btn-primary,
+    .card-section > .btn-row {
+      margin-top: 0.9rem;
+    }
   </style>
 </head>
 <body>
-  <h1>DGX Spark Local System</h1>
-  <p>System is running 🚀</p>
-  <p id="status">Checking...</p>
+  <header class="site-header">
+    <h1>EchoMind Starter Dashboard</h1>
+    <p class="tagline">Local control · DGX Spark</p>
+    <p class="brand-sub"><strong>EchoMind</strong> — powered by <strong>Ajace AI</strong></p>
+  </header>
 
-  <section style="margin-top: 1.5rem;">
+  <div class="wrap">
+    <div class="hero-card">
+      <div class="hero-row">
+        <p class="hero-lede">Local tools and services on this device.</p>
+        <p id="status">Checking…</p>
+      </div>
+    </div>
+
+  <div id="app-ports-box" class="panel unknown" aria-live="polite">
+    <p class="panel-title-row"><strong>Services</strong> <button type="button" class="btn-ghost" id="app-ports-refresh">Refresh</button></p>
+    <p class="section-lede" style="margin-bottom:0.35rem;">See whether EchoMind and Personaplex are reachable from this machine.</p>
+    <div id="app-ports-friendly"><p class="panel-meta">Loading…</p></div>
+    <details class="tech-details">
+      <summary>Technical details · ports &amp; full URLs</summary>
+      <div class="tech-body">
+        <p class="panel-meta">Checks <code>127.0.0.1:3443</code> (EchoMind) and <code>127.0.0.1:8998</code> (Personaplex).</p>
+        <ul id="app-ports-list"></ul>
+      </div>
+    </details>
+  </div>
+
+  <details class="tech-details port-hint-details">
+    <summary class="port-hint-summary">Connection help · direct dashboard link</summary>
+    <div class="tech-body" id="port-hint">
+      <p style="margin:0;"><strong>Direct access:</strong> This dashboard uses port <strong id="panel-port">28734</strong> (confirmed via <code>/health</code>).</p>
+      <p style="margin:0.65rem 0 0;">If <code>http://localhost</code> does not open this page, use <a id="direct-app" href="#">this link</a> (bypasses port 80). Port 80 usually means <code>nginx</code> — after hotspot setup you may need <code>sudo systemctl start nginx</code>.</p>
+    </div>
+  </details>
+
+  <section class="card-section">
     <h2>EchoMind</h2>
-    <p>Runs <code>docker compose down</code> then <code>docker compose up -d</code> in the enterprise folder.</p>
-    <button type="button" id="echomind-btn">EchoMind</button>
+    <p class="section-lede">Start the enterprise stack. It may take a few minutes before the app is ready — use <strong>Open</strong> in Services when it shows Ready.</p>
+    <details class="tech-details">
+      <summary>What this does (technical)</summary>
+      <div class="tech-body">
+        <p>Runs <code>docker compose down</code> then <code>docker compose up -d</code> in the enterprise folder <strong>in the background</strong> so the browser does not hit a proxy timeout. Then open the EchoMind URL from the result or from Services.</p>
+      </div>
+    </details>
+    <button type="button" class="btn-primary" id="echomind-btn">Start EchoMind</button>
     <p id="echomind-error" hidden></p>
     <div id="echomind-result" hidden></div>
   </section>
 
-  <section style="margin-top: 1.5rem;">
+  <section class="card-section">
     <h2>Personaplex · Conversation</h2>
-    <p>Runs <code>npm run build</code> in <code>~/Documents/plex/personaplex/client</code>, stops old <code>moshi.server</code> / vite / port 8998, then starts <code>python -m moshi.server --fp8 --ssl … --static client/dist</code> in the background (logs: <code>/tmp/moshi-personaplex.log</code>).</p>
-    <button type="button" id="personaplex-conversation-btn">Conversation</button>
+    <p class="section-lede">Start the voice conversation server, then open the link when it appears below.</p>
+    <details class="tech-details">
+      <summary>What this does (technical)</summary>
+      <div class="tech-body">
+        <p>Starts <code>moshi.server</code> only (matches typical manual steps): <code>cd</code> repo → activate <code>~/personaplex-venv</code> → temp SSL dir → <code>python -m moshi.server --fp8 --ssl … --static client/dist</code> in the background. No npm build, no <code>pkill</code>. Requires existing <code>client/dist</code>. Logs: <code>/tmp/moshi-personaplex.log</code>.</p>
+      </div>
+    </details>
+    <button type="button" class="btn-primary" id="personaplex-conversation-btn">Start conversation</button>
     <p id="personaplex-error" hidden></p>
     <div id="personaplex-result" hidden></div>
   </section>
 
-  <section style="margin-top: 1.5rem;">
+  <section class="card-section">
     <h2>Wi‑Fi hotspot</h2>
-    <p>Two actions only. <strong>Enable</strong> = first-time setup + hotspot on. <strong>Disable</strong> = hotspot off + normal Wi‑Fi. Status updates after each action and on page load. Passwordless sudo: <code>./install_passwordless_sudo.sh</code>.</p>
+    <p class="section-lede"><strong>Enable</strong> turns on the hotspot (and runs first-time setup if needed). <strong>Disable</strong> turns it off and restores normal Wi‑Fi. <strong>Safe stop</strong> turns the AP off and blocks autostart without restarting NetworkManager — use it if Disable causes trouble or you want an extra guard.</p>
 
-    <div id="hotspot-status-box" class="hotspot-status-box unknown" aria-live="polite">
-      <p style="margin: 0 0 0.35rem;"><strong>Hotspot stack:</strong> <span id="hotspot-overall" class="overall">Loading…</span></p>
-      <p id="hotspot-summary" style="margin: 0; font-size: 0.95rem; color: #333;"></p>
-      <ul id="hotspot-services-list"></ul>
+    <div id="hotspot-status-box" class="panel hotspot-panel unknown" aria-live="polite">
+      <div class="hotspot-compact-row">
+        <span class="hotspot-label">Hotspot</span>
+        <span id="hotspot-overall" class="overall hotspot-pill">Loading…</span>
+      </div>
+      <details class="tech-details">
+        <summary>Details &amp; per-service status</summary>
+        <div class="tech-body">
+          <p id="hotspot-summary" class="panel-meta"></p>
+          <ul id="hotspot-services-list"></ul>
+        </div>
+      </details>
     </div>
 
+    <details class="tech-details">
+      <summary>Advanced · sudo &amp; scripts</summary>
+      <div class="tech-body">
+        <p>These actions call setup scripts on the machine and may require passwordless sudo. Install with <code>scripts/install_passwordless_sudo.sh</code> from this project if prompted (include <code>hotspot_safe_stop.sh</code> after an update).</p>
+      </div>
+    </details>
+
     <div class="btn-row">
-      <button type="button" id="hotspot-enable-btn" title="hotspot_enable.sh">Enable hotspot</button>
-      <button type="button" id="hotspot-disable-btn" title="hotspot_disable.sh">Disable hotspot (restore Wi‑Fi)</button>
+      <button type="button" class="btn-primary" id="hotspot-enable-btn" title="hotspot_enable.sh">Enable hotspot</button>
+      <button type="button" class="btn-secondary" id="hotspot-disable-btn" title="hotspot_disable.sh">Disable hotspot</button>
+      <button type="button" class="btn-safety" id="hotspot-safe-stop-btn" title="hotspot_safe_stop.sh — skip autostart + stop AP only">Safe stop</button>
     </div>
     <p id="hotspot-error" hidden></p>
     <div id="hotspot-result" hidden></div>
   </section>
+  </div>
+
+  <footer class="site-footer">
+    EchoMind · Ajace AI · Starter dashboard for local services
+  </footer>
 
   <script>
+    var _host = window.location.hostname || '127.0.0.1';
+    var _proto = window.location.protocol || 'http:';
+    var _defaultPanelPort = 28734;
+    function applyPanelPort(port) {
+      var n = (port != null && port !== '') ? Number(port) : _defaultPanelPort;
+      if (!Number.isFinite(n)) n = _defaultPanelPort;
+      var u = _proto + '//' + _host + ':' + n + '/';
+      var a = document.getElementById('direct-app');
+      if (a) { a.href = u; a.textContent = u; }
+      var el = document.getElementById('panel-port');
+      if (el) el.textContent = String(n);
+    }
+
+    function setStatus(text, kind) {
+      var el = document.getElementById('status');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('status-ok', 'status-down');
+      if (kind === 'ok') el.classList.add('status-ok');
+      else if (kind === 'down') el.classList.add('status-down');
+    }
+
     fetch('/health')
       .then(res => res.json())
-      .then(() => { document.getElementById('status').innerText = "Backend Healthy"; })
-      .catch(() => { document.getElementById('status').innerText = "Backend Down"; });
+      .then((data) => {
+        setStatus('Backend healthy', 'ok');
+        applyPanelPort(data.port);
+      })
+      .catch(() => {
+        setStatus('Backend unreachable', 'down');
+        applyPanelPort(_defaultPanelPort);
+      });
+
+    async function refreshAppPorts() {
+      const listEl = document.getElementById('app-ports-list');
+      const friendlyEl = document.getElementById('app-ports-friendly');
+      const box = document.getElementById('app-ports-box');
+      if (!listEl || !friendlyEl || !box) return;
+      var esc = function (t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); };
+      friendlyEl.innerHTML = '<p class="panel-meta">Checking…</p>';
+      listEl.innerHTML = '<li>Checking…</li>';
+      try {
+        const res = await fetch('/api/apps/ports');
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          friendlyEl.innerHTML = '<p class="panel-meta">Could not load service status.</p>';
+          listEl.innerHTML = '<li class="svc-off">Could not load status</li>';
+          return;
+        }
+        const svcs = data.services || [];
+        friendlyEl.innerHTML = '';
+        listEl.innerHTML = '';
+        svcs.forEach(function (s) {
+          var ok = s.active === true;
+          var row = document.createElement('div');
+          row.className = 'svc-friendly-row';
+          var linkHtml = ok
+            ? '<a class="svc-open" href="' + esc(s.url) + '" target="_blank" rel="noopener">Open</a>'
+            : '<span class="svc-open-disabled">Not available</span>';
+          row.innerHTML = '<span class="svc-friendly-name">' + esc(s.label) + '</span>'
+            + '<span class="svc-badge' + (ok ? ' ok' : '') + '">' + (ok ? 'Ready' : 'Not running') + '</span>'
+            + linkHtml;
+          friendlyEl.appendChild(row);
+          var li = document.createElement('li');
+          li.innerHTML = '<span class="' + (ok ? 'svc-ok' : 'svc-off') + '">' + (ok ? 'Listening' : 'Not listening') + '</span>'
+            + ' — ' + esc(s.label) + ' — <a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.url) + '</a>';
+          listEl.appendChild(li);
+        });
+        if (!svcs.length) {
+          friendlyEl.innerHTML = '<p class="panel-meta">No services configured.</p>';
+          listEl.innerHTML = '<li class="svc-off">No services configured</li>';
+        }
+      } catch (e) {
+        friendlyEl.innerHTML = '<p class="panel-meta">' + esc(String(e.message || 'Error')) + '</p>';
+        listEl.innerHTML = '<li class="svc-off">' + esc(String(e.message || 'Error')) + '</li>';
+      }
+    }
+    refreshAppPorts();
+    var apr = document.getElementById('app-ports-refresh');
+    if (apr) apr.addEventListener('click', function () { refreshAppPorts(); });
 
     const btn = document.getElementById('echomind-btn');
     const errEl = document.getElementById('echomind-error');
@@ -98,12 +636,13 @@
         const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
         resultEl.innerHTML = '<p>' + esc(data.message) + '</p><p><a href="' + esc(data.url) + '" target="_blank" rel="noopener">' + esc(data.url) + '</a></p>';
         resultEl.hidden = false;
+        refreshAppPorts();
       } catch (e) {
         errEl.textContent = e.message || 'Request failed';
         errEl.hidden = false;
       } finally {
         btn.disabled = false;
-        btn.textContent = 'EchoMind';
+        btn.textContent = 'Start EchoMind';
       }
     });
 
@@ -116,30 +655,40 @@
       pErr.textContent = '';
       pRes.textContent = '';
       pBtn.disabled = true;
-      pBtn.textContent = 'Building & starting…';
+      pBtn.textContent = 'Starting…';
       try {
-        const res = await fetch('/api/personaplex/conversation', { method: 'POST' });
+        const url = new URL('/api/personaplex/conversation', window.location.origin).href;
+        const res = await fetch(url, { method: 'POST', headers: { 'Accept': 'application/json' } });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           const detail = data.detail != null ? String(data.detail) : res.statusText;
-          throw new Error(detail);
+          if (res.status === 404) {
+            throw new Error(
+              'HTTP 404: this server does not expose /api/personaplex/conversation. '
+              + 'On the DGX run: sudo systemctl restart dgx-app (deploy latest backend/main.py). '
+              + 'Quick check: open GET ' + new URL('/api/personaplex/conversation', window.location.origin).href
+            );
+          }
+          throw new Error(res.status + ' ' + detail);
         }
         const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
         pRes.innerHTML = '<pre style="margin:0;white-space:pre-wrap;">' + esc(data.message || '') + '</pre>'
           + '<p><a href="' + esc(data.url) + '" target="_blank" rel="noopener">' + esc(data.url) + '</a> (self-signed TLS — browser warning is normal)</p>';
         pRes.hidden = false;
+        refreshAppPorts();
       } catch (e) {
         pErr.textContent = e.message || 'Request failed';
         pErr.hidden = false;
       } finally {
         pBtn.disabled = false;
-        pBtn.textContent = 'Conversation';
+        pBtn.textContent = 'Start conversation';
       }
     });
 
     const hotspotButtons = () => [
       document.getElementById('hotspot-enable-btn'),
       document.getElementById('hotspot-disable-btn'),
+      document.getElementById('hotspot-safe-stop-btn'),
     ];
 
     function setHotspotButtonsDisabled(disabled) {
@@ -197,6 +746,8 @@
       errEl.textContent = '';
       resultEl.textContent = '';
       setHotspotButtonsDisabled(true);
+      var safeStopBtn = document.getElementById('hotspot-safe-stop-btn');
+      if (safeStopBtn) safeStopBtn.textContent = action === 'safe-stop' ? 'Stopping…' : 'Safe stop';
       try {
         const res = await fetch('/api/hotspot/' + action, { method: 'POST' });
         const data = await res.json().catch(() => ({}));
@@ -211,12 +762,15 @@
         errEl.hidden = false;
       } finally {
         setHotspotButtonsDisabled(false);
+        if (safeStopBtn) safeStopBtn.textContent = 'Safe stop';
         await refreshHotspotStatus();
+        refreshAppPorts();
       }
     }
 
     document.getElementById('hotspot-enable-btn').addEventListener('click', () => callHotspot('enable'));
     document.getElementById('hotspot-disable-btn').addEventListener('click', () => callHotspot('disable'));
+    document.getElementById('hotspot-safe-stop-btn').addEventListener('click', () => callHotspot('safe-stop'));
 
     refreshHotspotStatus();
   </script>

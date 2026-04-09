@@ -19,6 +19,7 @@ SUDOERS_PATH="/etc/sudoers.d/${SUDOERS_FILE}"
 SCRIPTS=(
   "${REPO_ROOT}/scripts/hotspot_enable.sh"
   "${REPO_ROOT}/scripts/hotspot_disable.sh"
+  "${REPO_ROOT}/scripts/hotspot_safe_stop.sh"
   "${REPO_ROOT}/scripts/setup_hotspot_stack.sh"
   "${REPO_ROOT}/scripts/start_hotspot_stack.sh"
   "${REPO_ROOT}/scripts/stop_hotspot_stack.sh"
