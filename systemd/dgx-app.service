@@ -3,10 +3,12 @@
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now dgx-app
 #
-# Boot: uvicorn starts first, then (after a short delay) maybe_start_hotspot_stack.sh brings up AP/DHCP/nginx
-# unless the user chose Disable (see /tmp/dgx-hotspot-skip-autostart — cleared on reboot or after Enable).
-# echomind MUST have NOPASSWD + !requiretty for maybe_start_hotspot_stack.sh — run scripts/install_passwordless_sudo.sh
-# Do NOT use hotspot_enable.sh here (can run full apt setup on first boot).
+# Boot: uvicorn starts first, then (after a short delay) maybe_start_hotspot_stack.sh runs unless
+# /tmp/dgx-hotspot-skip-autostart exists (after Disable/Safe stop until Enable or reboot).
+# Then start_hotspot_stack or hotspot_enable if the configured marker is missing.
+# echomind MUST have NOPASSWD + !requiretty for hotspot_enable.sh and start_hotspot_stack.sh
+# (maybe_start invokes them via sudo) — run scripts/install_passwordless_sudo.sh
+# First boot with no configured marker can run apt from hotspot_enable (may take minutes once).
 # Leading "-" = hotspot failure does not fail the whole dgx-app unit.
 
 [Unit]

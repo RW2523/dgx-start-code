@@ -4,9 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EchoMind Starter Dashboard</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <!-- Self-hosted fonts (SIL Open Font License) — no Google Fonts network access -->
+  <link rel="stylesheet" href="/static/fonts/fonts.css" />
   <style>
     :root {
       --blue-950: #061426;
@@ -496,7 +495,7 @@
 
   <section class="card-section">
     <h2>Wi‑Fi hotspot</h2>
-    <p class="section-lede"><strong>Enable</strong> turns on the hotspot (and runs first-time setup if needed). <strong>Disable</strong> turns it off and restores normal Wi‑Fi. <strong>Safe stop</strong> turns the AP off and blocks autostart without restarting NetworkManager — use it if Disable causes trouble or you want an extra guard.</p>
+    <p class="section-lede"><strong>Enable</strong> turns on the hotspot (and runs first-time setup if needed). <strong>Disable</strong> turns it off and restores normal Wi‑Fi. <strong>Safe stop</strong> stops the AP only (no NetworkManager undo). Both <strong>Disable</strong> and <strong>Safe stop</strong> set a session flag so if <code>dgx-app</code> restarts, the hotspot is not turned back on automatically until you click <strong>Enable</strong> or reboot.</p>
 
     <div id="hotspot-status-box" class="panel hotspot-panel unknown" aria-live="polite">
       <div class="hotspot-compact-row">
@@ -522,7 +521,7 @@
     <div class="btn-row">
       <button type="button" class="btn-primary" id="hotspot-enable-btn" title="hotspot_enable.sh">Enable hotspot</button>
       <button type="button" class="btn-secondary" id="hotspot-disable-btn" title="hotspot_disable.sh">Disable hotspot</button>
-      <button type="button" class="btn-safety" id="hotspot-safe-stop-btn" title="hotspot_safe_stop.sh — skip autostart + stop AP only">Safe stop</button>
+      <button type="button" class="btn-safety" id="hotspot-safe-stop-btn" title="hotspot_safe_stop.sh — stop AP only; session skip until Enable or reboot">Safe stop</button>
     </div>
     <p id="hotspot-error" hidden></p>
     <div id="hotspot-result" hidden></div>

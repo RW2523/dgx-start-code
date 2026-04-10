@@ -7,13 +7,13 @@ MARKER=/var/lib/dgx-hotspot/configured
 
 if [ ! -f "$MARKER" ]; then
   echo "==> No marker at $MARKER — first-time setup_hotspot_stack.sh ..."
-  sudo bash "${SCRIPT_DIR}/setup_hotspot_stack.sh"
+  sudo "${SCRIPT_DIR}/setup_hotspot_stack.sh"
 else
   echo "==> Hotspot already configured — skipping setup."
 fi
 
 echo "==> start_hotspot_stack.sh ..."
-sudo bash "${SCRIPT_DIR}/start_hotspot_stack.sh"
+sudo "${SCRIPT_DIR}/start_hotspot_stack.sh"
 
 echo
 echo "Hotspot enable complete. dgx-app on :28734 was not stopped."

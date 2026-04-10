@@ -1,0 +1,6 @@
+Self-hosted copies of Google Fonts releases:
+
+- Outfit (Fontshare / Rodrigo Fuenzalida, Ninad Kale — SIL Open Font License 1.1)
+- Source Sans 3 (Adobe — SIL Open Font License 1.1)
+
+Full license texts: https://openfontlicense.org

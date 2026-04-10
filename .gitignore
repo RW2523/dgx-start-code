@@ -1,5 +1,8 @@
 # Python
 backend/.venv/
+backend/vendor/wheels/*.whl
+backend/vendor/wheels/*.tar.gz
+backend/vendor/wheels/*.zip
 backend/**/__pycache__/
 *.py[cod]
 *.pyo
