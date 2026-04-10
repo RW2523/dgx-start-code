@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-WIFI_IFACE="wlP9s9"
+WIFI_IFACE="${WIFI_IFACE:-wlP9s9}"
 
 echo "==> Stopping services (dgx-app not touched — app keeps running)..."
 sudo systemctl stop hostapd || true

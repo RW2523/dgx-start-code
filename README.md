@@ -16,6 +16,8 @@ FastAPI control panel for **EchoMind** (Docker), **Personaplex / moshi** convers
   - Open **`http://localhost:28734`** (uvicorn / `dgx-app` directly), or
   - `sudo systemctl start nginx` (and ensure `proxy_pass` in the app site points at **`127.0.0.1:28734`**).
 
+Full machine install (git clone → systemd → hotspot): see **[setup.md](setup.md)**.
+
 ## Quick start (dev)
 
 ```bash

@@ -1,19 +1,20 @@
 #!/bin/bash
 set -e
 
-WIFI_IFACE="wlP9s9"
-SSID="DGX-Spark-AI"
-WIFI_PASSWORD="12345678"
-HOTSPOT_IP="10.10.0.1"
-DHCP_START="10.10.0.10"
-DHCP_END="10.10.0.100"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Override on other machines: DG_HOTSPOT_USER, DG_APP_DIR, WIFI_IFACE (see setup.md).
+WIFI_IFACE="${WIFI_IFACE:-wlP9s9}"
+SSID="${HOTSPOT_SSID:-DGX-Spark-AI}"
+WIFI_PASSWORD="${HOTSPOT_WIFI_PASSWORD:-12345678}"
+HOTSPOT_IP="${HOTSPOT_IP:-10.10.0.1}"
+DHCP_START="${HOTSPOT_DHCP_START:-10.10.0.10}"
+DHCP_END="${HOTSPOT_DHCP_END:-10.10.0.100}"
 
-APP_USER="echomind"
-APP_DIR="/home/echomind/dgx-local-app/backend"
+APP_USER="${DG_HOTSPOT_USER:-echomind}"
+APP_DIR="${DG_APP_DIR:-$REPO_ROOT/backend}"
 APP_SERVICE="dgx-app"
 # Uncommon dev port (avoid 3000/8000/8080/5173). Match systemd + nginx + DGX_APP_PORT in main.py default.
-APP_PORT=28734
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+APP_PORT="${DGX_APP_PORT:-28734}"
 
 echo "==> Installing required packages..."
 sudo apt update
